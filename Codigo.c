@@ -2,7 +2,8 @@
 - Kevin Yavari Yoshioka
 - Julian Galvis
 - Jean Karlo */
-
+/* Queda pendiente el inventario, colocar el limite de vida y stamina en curación, en el combate añadir mensajes
+claros de lo que sucede, añadir medidas de posibles errores*/
 /* Librerias */
 #include <stdio.h>
 #include <stdlib.h>
