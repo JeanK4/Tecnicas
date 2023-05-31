@@ -40,6 +40,7 @@ typedef struct player{
     int health2;
     int agility;
     int stamina;
+    int clasep;
 }Jugador;
 
 typedef struct monster{

@@ -3,10 +3,11 @@
 #include <windows.h>
 
     int abilitypoints = 0;
-    int flag = 0;
-    Jugador player;
+    int flag1 = 0;
     int zona = 0;
+    Jugador player;
     char zonas[5][10] = {"Avalon", "El Dorado", "Atlantis", "El Olimpo", "Narnia"};
+    
 
     Objeto Index[6] = {
         {"Pocion de vida", 150},
@@ -24,19 +25,7 @@
     {"Engolo","Un duende asesino de niños, no tiene debilidad",10000,10000,10},
     };
 
-    ListGraf graph[VERTEX_NUMBER];
-    create_graph(graph);
-    
-    add_node_to_graph(graph, 0, 1);
-    add_node_to_graph(graph, 0, 2);
-    add_node_to_graph(graph, 1, 0);
-    add_node_to_graph(graph, 1, 3);
-    add_node_to_graph(graph, 1, 4);
-    add_node_to_graph(graph, 2, 0);
-    add_node_to_graph(graph, 2, 4);
-    add_node_to_graph(graph, 3, 1);
-    add_node_to_graph(graph, 4, 1);
-    add_node_to_graph(graph, 4, 2);
+   
 
     /* Definicion Listas de Objetos */
 
@@ -47,22 +36,35 @@
         return lista;
     }
 
-    void agregarObjeto(List* lista, Objeto objeto){
+    void agregarObjeto(List* lista, Objeto objeto) {
         Node* nuevoNodo = (Node*) malloc(sizeof(Node));
         nuevoNodo->object = objeto;
         nuevoNodo->next = NULL;
 
-        if(lista->head == NULL){
+        if (lista->head == NULL) {
             lista->head = nuevoNodo;
-        }
-        else{
-            Node* ultimoNodo = lista->head;
-            while(ultimoNodo->next != NULL){
-                ultimoNodo = ultimoNodo->next;
+        } 
+        else {
+            Node* nodoActual = lista->head;
+            Node* nodoAnterior = NULL;
+
+            // Recorremos la lista hasta encontrar la posición correcta
+            while (nodoActual != NULL && strcmp(objeto.name, nodoActual->object.name) > 0) {
+                nodoAnterior = nodoActual;
+                nodoActual = nodoActual->next;
             }
-            ultimoNodo->next = nuevoNodo;
+
+            // Insertamos el nuevo nodo en la posición correcta
+            if (nodoAnterior == NULL) {
+                nuevoNodo->next = lista->head;
+                lista->head = nuevoNodo;
+            } 
+            else {
+                nodoAnterior->next = nuevoNodo;
+                nuevoNodo->next = nodoActual;
+            }
         }
-      
+
         lista->size++;
     }
 
@@ -144,23 +146,26 @@
 
     void combate(){
         srand(time(0));
-        int damage, boss = rand() % 5;
-        printf("Se ha encontrado con: %s\n" , monst[boss].name);
-        while(monst[boss].health2 > 0 && player.health2 > 0){ 
+        int damage;
+        printf("Se ha encontrado con: %s\n" , monst[zona].name);
+        printf("%s no te dejara avanzar sin antes luchar...\n", monst[zona].name);
+        printf("\nYour health:%d  Boss health:%d\n", player.health2, monst[zona].health2);
+        printf("Your stamina: %d\n",player.stamina);
+        while(monst[zona].health2 > 0 && player.health2 > 0){ 
             int opcion2 = 0, probabilidadparry = rand() % 2, probabilidadgolpe = rand() % 3, probabilidadesquivar = rand() % 2, bossdamage = rand() % (100-150+1) + 100;
             if(player.stamina > 0){
-                printf("\n1. Ataque ligero\n2. Ataque pesado\n3. Ataque magico\n4. Esquivar\n5. Parry\n6. Regenerar\n7. Escapar\nElige una opcion > ");
+                printf("\n1. Ataque ligero\n2. Ataque pesado\n3. Ataque magico\n4. Esquivar\n5. Parry\n6. Regenerar\nElige una opcion > ");
                 scanf("%d",&opcion2);
                 switch(opcion2){
                 case 1:
-                    monst[boss].health2 = monst[boss].health2 - player.damage;
+                    monst[zona].health2 = monst[zona].health2 - player.damage;
                     player.stamina -= 375;
                     break;
                 case 2:
                     if(probabilidadgolpe != 0){
                         printf("\nAtaque exitoso\n");
                         damage = player.damage * 2;
-                        monst[boss].health2 = monst[boss].health2 - damage;
+                        monst[zona].health2 = monst[zona].health2 - damage;
                     }   
                     else{
                         printf("\nAtaque fallido\n");
@@ -169,6 +174,12 @@
                     player.stamina -= 390;  
                     break;
                 case 3:
+                    if(player.clasep == 3){
+                        damage = player.damage * 2.5;
+                        monst[zona].health2 = monst[zona].health2 - damage;
+                    }
+                    else
+                        printf("La clase de tu jugador es incompatible con magia\n");
                     break;
                 case 4:
                     if(probabilidadesquivar == 0){
@@ -184,19 +195,15 @@
                     if(probabilidadparry == 1){
                         printf("\nParry exitoso\n");
                         bossdamage *= 0;
-                        monst[boss].health2 -= player.damage*4;
+                        monst[zona].health2 -= player.damage*4;
                     }
                     else{
-                        printf("\nParry fallido\n");
-                        
+                        printf("\nParry fallido\n"); 
                     }
                     player.stamina -= 500;
                     break;
                 case 6:
-                    break;
-                case 7:
-                    break;
-                case 8:
+                    player.stamina += 500;
                     break;
                 default:
                     printf("\nLa opcion ingresada no existe\n\n");
@@ -213,12 +220,17 @@
             player.stamina += (fabs(player.stamina) * 0.3);
             }
             player.health2 = player.health2 - bossdamage;
-            printf("\nYour health:%d  Boss health:%d\n", player.health2, monst[boss].health2);
+            printf("\nYour health:%d  Boss health:%d\n", player.health2, monst[zona].health2);
             printf("Your stamina: %d\n",player.stamina);
         
         }
-        if(player.health2 < 0){
-            flag = 1;
+        if(player.health2 <= 0){
+            flag1 = 1;
+        }
+        else if(monst[zona].health2 <= 0){
+            printf("\nHas derrotado a %s\n", monst[zona].name);
+            printf("Has sido recompensado con %d puntos de habilidad\n\n", monst[zona].rewards);
+            abilitypoints += monst[zona].rewards;      
         }
     }
 
@@ -269,11 +281,198 @@
         }
     }
     
-    void avanzar(){
-        print_simple_list(ListGraf);
+    void avanzar(ListGraf* graph, int *zona){
+        print_simple_list(graph[*zona]);
+        int caso;
+        int flag = 1;
+        while(flag == 1){
+            if(*zona == 0){
+                printf("Elige una opcion > ");
+                scanf("%d", &caso);
+                if(caso == 1){   
+                    *zona = 1;
+                    flag = 0;
+                    printf("\n");
+                    printf("-------------|----|----|-\n");
+                    printf("-------------)_)--)_)--)_)\n");
+                    printf("------------)___))___))___)\n");
+                    printf("-----------)____)____)_____)\n");
+                    printf("---------_____|____|____|_____\n");
+                    printf("---------\\-------------------/\n");
+                    printf("--^^^^^-^^^^^^^^^^^^^^^^^^^^^\n");
+                    printf("----^^^^------^^^^-----^^^----^\n");
+                    printf("---------^^^^------^^^\n");
+                    printf("Navegando hacia la nacion de %s\n\n", zonas[1]);
+                }
+                else if(caso == 2){
+                    *zona = 2;
+                    flag = 0;
+                    printf("\n");
+                    printf("-------------|----|----|-\n");
+                    printf("-------------)_)--)_)--)_)\n");
+                    printf("------------)___))___))___)\n");
+                    printf("-----------)____)____)_____)\n");
+                    printf("---------_____|____|____|_____\n");
+                    printf("---------\\-------------------/\n");
+                    printf("--^^^^^-^^^^^^^^^^^^^^^^^^^^^\n");
+                    printf("----^^^^------^^^^-----^^^----^\n");
+                    printf("---------^^^^------^^^\n");
+                    printf("Navegando hacia la nacion de %s\n\n", zonas[2]);
+                }
+                else{
+                    printf("No hay camino a esa zona\n");
+                }
+            }
+            else if(*zona == 1){
+                printf("Elige una opcion > ");
+                scanf("%d", &caso);
+                if(caso == 0){   
+                    *zona = 0;
+                    flag = 0;
+                    printf("\n");
+                    printf("-------------|----|----|-\n");
+                    printf("-------------)_)--)_)--)_)\n");
+                    printf("------------)___))___))___)\n");
+                    printf("-----------)____)____)_____)\n");
+                    printf("---------_____|____|____|_____\n");
+                    printf("---------\\-------------------/\n");
+                    printf("--^^^^^-^^^^^^^^^^^^^^^^^^^^^\n");
+                    printf("----^^^^------^^^^-----^^^----^\n");
+                    printf("---------^^^^------^^^\n");
+                    printf("Navegando hacia la nacion de %s\n\n", zonas[0]);
+                }
+                else if(caso == 3){
+                    *zona = 3;
+                    flag = 0;
+                    printf("\n");
+                    printf("-------------|----|----|-\n");
+                    printf("-------------)_)--)_)--)_)\n");
+                    printf("------------)___))___))___)\n");
+                    printf("-----------)____)____)_____)\n");
+                    printf("---------_____|____|____|_____\n");
+                    printf("---------\\-------------------/\n");
+                    printf("--^^^^^-^^^^^^^^^^^^^^^^^^^^^\n");
+                    printf("----^^^^------^^^^-----^^^----^\n");
+                    printf("---------^^^^------^^^\n");
+                    printf("Navegando hacia la nacion de %s\n\n", zonas[3]);
+                }
+                else if(caso == 4){
+                    *zona = 4;
+                    flag = 0;
+                    printf("\n");
+                    printf("-------------|----|----|-\n");
+                    printf("-------------)_)--)_)--)_)\n");
+                    printf("------------)___))___))___)\n");
+                    printf("-----------)____)____)_____)\n");
+                    printf("---------_____|____|____|_____\n");
+                    printf("---------\\-------------------/\n");
+                    printf("--^^^^^-^^^^^^^^^^^^^^^^^^^^^\n");
+                    printf("----^^^^------^^^^-----^^^----^\n");
+                    printf("---------^^^^------^^^\n");
+                    printf("Navegando hacia la nacion de %s\n\n", zonas[4]);
+                }
+                else{
+                    printf("No hay camino a esa zona\n");
+                }
+            }
+            else if(*zona == 2){
+                printf("Elige una opcion > ");
+                scanf("%d", &caso);
+                if(caso == 0){   
+                    *zona = 0;
+                    flag = 0;
+                    printf("\n");
+                    printf("-------------|----|----|-\n");
+                    printf("-------------)_)--)_)--)_)\n");
+                    printf("------------)___))___))___)\n");
+                    printf("-----------)____)____)_____)\n");
+                    printf("---------_____|____|____|_____\n");
+                    printf("---------\\-------------------/\n");
+                    printf("--^^^^^-^^^^^^^^^^^^^^^^^^^^^\n");
+                    printf("----^^^^------^^^^-----^^^----^\n");
+                    printf("---------^^^^------^^^\n");
+                    printf("Navegando hacia la nacion de %s\n\n", zonas[0]);
+                }
+                else if(caso == 4){
+                    *zona = 4;
+                    flag = 0;
+                    printf("\n");
+                    printf("-------------|----|----|-\n");
+                    printf("-------------)_)--)_)--)_)\n");
+                    printf("------------)___))___))___)\n");
+                    printf("-----------)____)____)_____)\n");
+                    printf("---------_____|____|____|_____\n");
+                    printf("---------\\-------------------/\n");
+                    printf("--^^^^^-^^^^^^^^^^^^^^^^^^^^^\n");
+                    printf("----^^^^------^^^^-----^^^----^\n");
+                    printf("---------^^^^------^^^\n");
+                    printf("Navegando hacia la nacion de %s\n\n", zonas[4]);
+                }
+                else{
+                    printf("No hay camino a esa zona\n");
+                }
+            }
+            else if(*zona == 3){
+                printf("Elige una opcion > ");
+                scanf("%d", &caso);
+                if(caso == 1){   
+                    *zona = 1;
+                    flag = 0;
+                    printf("\n");
+                    printf("-------------|----|----|-\n");
+                    printf("-------------)_)--)_)--)_)\n");
+                    printf("------------)___))___))___)\n");
+                    printf("-----------)____)____)_____)\n");
+                    printf("---------_____|____|____|_____\n");
+                    printf("---------\\-------------------/\n");
+                    printf("--^^^^^-^^^^^^^^^^^^^^^^^^^^^\n");
+                    printf("----^^^^------^^^^-----^^^----^\n");
+                    printf("---------^^^^------^^^\n");
+                    printf("Navegando hacia la nacion de %s\n\n", zonas[1]);
+                }
+                else{
+                    printf("No hay camino a esa zona\n");
+                }
+            }
+            else if(*zona == 4){
+                printf("Elige una opcion > ");
+                scanf("%d", &caso);
+                if(caso == 1){   
+                    *zona = 1;
+                    flag = 0;
+                    printf("\n");
+                    printf("-------------|----|----|-\n");
+                    printf("-------------)_)--)_)--)_)\n");
+                    printf("------------)___))___))___)\n");
+                    printf("-----------)____)____)_____)\n");
+                    printf("---------_____|____|____|_____\n");
+                    printf("---------\\-------------------/\n");
+                    printf("--^^^^^-^^^^^^^^^^^^^^^^^^^^^\n");
+                    printf("----^^^^------^^^^-----^^^----^\n");
+                    printf("---------^^^^------^^^\n");
+                    printf("Navegando hacia la nacion de %s\n\n", zonas[1]);
+                }
+                else if(caso == 2){
+                    *zona = 2;
+                    flag = 0;
+                    printf("\n");
+                    printf("-------------|----|----|-\n");
+                    printf("-------------)_)--)_)--)_)\n");
+                    printf("------------)___))___))___)\n");
+                    printf("-----------)____)____)_____)\n");
+                    printf("---------_____|____|____|_____\n");
+                    printf("---------\\-------------------/\n");
+                    printf("--^^^^^-^^^^^^^^^^^^^^^^^^^^^\n");
+                    printf("----^^^^------^^^^-----^^^----^\n");
+                    printf("---------^^^^------^^^\n");
+                    printf("Navegando hacia la nacion de %s\n\n", zonas[2]);
+                }
+                else{
+                    printf("No hay camino a esa zona\n");
+                }
+            }
+        }
     }
-
-
 
     void juegonuevo(){
         char nombre[30];
@@ -313,6 +512,7 @@
             player.health2 = 1400;
             player.agility = 100;
             player.stamina = 1200;
+            player.clasep = 1;
         }
         else if(clase == 2){
             printf("\nHas seleccionado la clase -> Guerrero\n");
@@ -328,6 +528,7 @@
             player.health2 = 2000;
             player.agility = 40;
             player.stamina = 1500;
+            player.clasep = 2;
         }
         else if(clase == 3){
             printf("\nHas seleccionado la clase -> Mago\n");
@@ -343,6 +544,7 @@
             player.health2 = 800;
             player.agility = 70;
             player.stamina = 2000;
+            player.clasep = 3;
         }
         else{
             printf("\nHas seleccionado la clase -> Tanque\n");
@@ -358,12 +560,12 @@
             player.health2 = 3000;
             player.agility = 20;
             player.stamina = 1600;
+            player.clasep = 4;
         }
     }
 
     void bestiario(){
         int i, contador = 0;
-        int aresf = 0, baganf = 0, culexf = 0, doomf = 0, engolof = 0;
         printf("-- BESTIARIO --\n\n");
         for(i = 0; i < 5; i++){
             if(monst[i].health2 < 0){
@@ -384,7 +586,20 @@
     void menu(){
         List* inventario = crearLista();
         int opcion1 = 0;
-        while(opcion1 != 6 && flag == 0){
+        ListGraf graph[5];
+        create_graph(graph);   
+        add_node_to_graph(graph, 0, 1);
+        add_node_to_graph(graph, 0, 2);
+        add_node_to_graph(graph, 1, 0);
+        add_node_to_graph(graph, 1, 3);
+        add_node_to_graph(graph, 1, 4);
+        add_node_to_graph(graph, 2, 0);
+        add_node_to_graph(graph, 2, 4);
+        add_node_to_graph(graph, 3, 1);
+        add_node_to_graph(graph, 4, 1);
+        add_node_to_graph(graph, 4, 2);
+        while(opcion1 != 6 && flag1 == 0){
+            printf("Te encuentras en %s\n", zonas[zona]);
             printf("\n1. Explorar\n2. Avanzar\n3. Estadisticas\n4. Inventario\n5. Bestiario\n6. Salir\nElige una opcion > ");
             scanf("%d",&opcion1);
             switch(opcion1){
@@ -395,6 +610,13 @@
             case 2:
                 printf("\nAvanzando...\n\n");
                 combate();
+                if(player.health2 > 0)
+                    avanzar(graph, &zona);
+                else{
+                    printf("Has sido derrotado\n");
+                    monst[zona].health2 = monst[zona].health1;
+                    zona = 0;
+                }
                 break;
             case 3:
                 printf("\nCargando Estadisticas...\n\n");
@@ -415,9 +637,8 @@
                 printf("\nLa opcion ingresada no existe\n\n");
                 break;
             }
-        }
-        if(flag == 1)
-            printf("Has sido derrotado\n");
+        } 
+        flag1 = 0;
     }
 
     /* Definicion funciones del grafo */
@@ -453,12 +674,22 @@
     void print_simple_list(ListGraf list) {
         NodeGraf* temp = list.head;
     
-        printf("Zona ");
-        for(int i = 0; i < list.size; i++) {
-            printf("%d -> ", temp->zone);
-            temp = temp->next;
+        if(temp->zone == 0){
+            printf("Estas en Avalon: Puedes ir a -> 1.El Dorado 2.Atlantis\n");
         }
-        printf("NULL");
+        else if(temp->zone == 1){
+            printf("Estas en El Dorado: Puedes ir a -> 0.Avalon 3.El Olimpo 4.Narnia\n");
+        }
+        else if(temp->zone == 2){
+            printf("Estas en Atlantis: Puedes ir a -> 0.Avalon 4.Narnia\n");
+        }
+        else if(temp->zone == 3){
+            printf("Estas en El Olimpo: Puedes ir a -> 1.El Dorado\n");
+        }
+        else if(temp->zone == 4){
+            printf("Estas en Narnia: Puedes ir a -> 1.El Dorado 2.Atlantis\n");
+        }
+        
     }
 
     void create_graph(ListGraf* arr) {

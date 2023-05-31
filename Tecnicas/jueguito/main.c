@@ -65,24 +65,7 @@ int main(){
     printf("\n");
     printf("\n");
     printf("\n");
-
-    ListGraf graph[VERTEX_NUMBER];
-    create_graph(graph);
     
-    add_node_to_graph(graph, 0, 1);
-    add_node_to_graph(graph, 0, 2);
-    add_node_to_graph(graph, 1, 0);
-    add_node_to_graph(graph, 1, 3);
-    add_node_to_graph(graph, 1, 4);
-    add_node_to_graph(graph, 2, 0);
-    add_node_to_graph(graph, 2, 4);
-    add_node_to_graph(graph, 3, 1);
-    add_node_to_graph(graph, 4, 1);
-    add_node_to_graph(graph, 4, 2);
-    
-    print_graph(graph);
-
-
 
     int option = 0;
     while(option != 3){
